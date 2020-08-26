@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>编辑</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" lay-filter="edit-form">
+    <input type="hidden" name="userId">
+    <div class="layui-form-item">
+        <label class="layui-form-label required">登录名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="loginName" autocomplete="off" lay-verify="required" lay-reqtext="登录名不能为空"
+                   placeholder="请输入登录名称" value=""
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">真实姓名</label>
+        <div class="layui-input-block">
+            <input type="text" name="realName" autocomplete="off" lay-verify="required" lay-reqtext="真实姓名不能为空"
+                   placeholder="请输入真实姓名" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">锁定状态</label>
+        <div class="layui-input-block">
+            <select name="isLocked" lay-filter="isLocked" lay-verify="required">
+                <option value="0">否</option>
+                <option value="1">是</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">手机号码</label>
+        <div class="layui-input-block">
+            <input type="text" name="phone" lay-verify="phone" autocomplete="off" placeholder="请输入手机号码" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">修改密码</label>
+        <div class="layui-input-block">
+            <select name="forceUpdatePwd" lay-filter="forceUpdatePwd" lay-verify="required">
+                <option value="0">是</option>
+                <option value="1" selected="selected">否</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item change-pass-layout" style="display: none">
+        <label class="layui-form-label">原始密码</label>
+        <div class="layui-input-block">
+            <input type="password" name="oldPassword" autocomplete="off" placeholder="请输入登录密码" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item change-pass-layout" style="display: none">
+        <label class="layui-form-label">修改密码</label>
+        <div class="layui-input-block">
+            <input type="password" name="password" autocomplete="off" placeholder="请输入登录密码" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="button" class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/base.js"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+
+        const id = window.getParams('id');
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            const url = window.basePath + '/api/user/account/edit';
+            let index = window.parent.layer.load(0, {shade: 0.1});
+            window.postBody(url, data.field, function (data) {
+                parent.layer.close(index);
+                if (data.errcode === 0) {
+                    parent.reloadTable();
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex, function () {
+                        parent.layer.msg('修改成功', {icon: 1, time: 1000});
+                    });
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                parent.layer.close(index);
+                layer.msg("网络出错!", {icon: 5});
+            })
+            return false;
+        });
+
+        form.on('select(forceUpdatePwd)',function (data) {
+            console.log(data);
+            if (data.value === '0'){
+                $('.change-pass-layout').show();
+            } else if (data.value === '1'){
+                $('.change-pass-layout').hide();
+            }
+        })
+
+        let index = window.parent.layer.load(0, {shade: 0.1});
+        const url = window.basePath + '/api/user/account/get?userId='+id;
+        window.get(url,function (data) {
+            if (checkError(data)){
+                form.val('edit-form',data.data);
+                $('.change-pass-layout').hide();
+            } else {
+                const iframeIndex = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(iframeIndex);
+                parent.layer.msg(data.errmsg, {icon: 2});
+            }
+        },function (data) {
+            layer.msg("网络出错!", {icon: 5});
+        },function () {
+            window.parent.layer.close(index);
+        })
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>绑定接口菜单</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../css/formSelects/formSelects-v4.css">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" lay-filter="edit-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限菜单</label>
+        <div class="layui-input-block">
+            <select name="menuIds" xm-select="menuIdsSelects" xm-select-search="">
+                <option value="">请选择绑定权限</option>
+            </select>
+
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="button" class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存
+            </button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script src="../../js/base.js"></script>
+<script>
+    layui.use(['formSelects', 'form'], function () {
+        const form = layui.form,
+            layer = layui.layer,
+            $ = layui.$,
+            formSelects = layui.formSelects;
+        formSelects.config({
+            keyName: 'name',
+            keyVal: 'id',
+        })
+
+        let isFirst = true;
+        const id = window.getParams('id');
+        const roleCode = window.getParams('roleCode');
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            const url = window.basePath + '/api/url-permit/role/grantPermission';
+            let index = window.parent.layer.load(0, {shade: 0.1});
+            data = data.field;
+            data.roleCode = roleCode;
+            let menuIds = data.menuIds.split(',');
+            delete data.menuIds;
+            data.menuIds = menuIds;
+            window.postBody(url, data, function (data) {
+                parent.layer.close(index);
+                if (data.errcode === 0) {
+                    parent.loadData();
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex, function () {
+                        parent.layer.msg('修改成功', {icon: 1, time: 1000});
+                    });
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                parent.layer.close(index);
+                layer.msg("网络出错!", {icon: 5});
+            })
+            return false;
+        });
+
+        let index = window.parent.layer.load(0, {shade: 0.1});
+
+        //初始化下拉列表
+        function initSelects() {
+            const url = window.basePath + '/api/url-permit/menu/list';
+            window.get(url, function (data) {
+                if (checkError(data)) {
+                    formSelects.data('menuIdsSelects', 'local', {
+                        arr: listToMulti('-1', data.data)
+                    })
+
+                    loadValue();
+                } else {
+                    parent.layer.close(index);
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex);
+                    parent.layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (data) {
+                layer.msg("网络出错!", {icon: 5});
+                window.parent.layer.close(index);
+            })
+        }
+
+        //列表转层级结构
+        function listToMulti(parentId, sourceData) {
+            let children = [];
+            for (let index in sourceData) {
+                if (sourceData[index].parentId === parentId) {
+                    let child = sourceData[index];
+                    child.children = listToMulti(child.id, sourceData);
+                    children.push(child);
+                }
+            }
+            return children;
+        }
+
+        //初始值
+        function loadValue() {
+            const url = window.basePath + '/api/url-permit/menu/listMenu';
+            const data = {roleCodes: [roleCode], type: 0};
+            window.postBody(url, data, function (data) {
+                if (checkError(data)) {
+                    let defaultVales = [];
+                    data = data.data.list;
+                    for (let i in data) {
+                        defaultVales.push(data[i].id);
+                    }
+                    formSelects.value('menuIdsSelects', defaultVales);
+                } else {
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex);
+                    parent.layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (data) {
+                layer.msg("网络出错!", {icon: 5});
+            }, function () {
+                window.parent.layer.close(index);
+            })
+        }
+
+        initSelects();
+
+
+        formSelects.opened('menuIdsSelects', function (id) {
+            if (isFirst) {
+                isFirst = false;
+                $('[fs_id="menuIdsSelects"]').find('.xm-cz i.icon-caidan').click();
+            }
+        });
+
+    });
+</script>
+</body>
+</html>

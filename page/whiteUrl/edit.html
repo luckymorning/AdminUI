@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>修改</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" lay-filter="edit-form">
+    <div class="layui-form-item">
+        <input type="hidden" name="id" id="id">
+        <label class="layui-form-label required">白名单地址</label>
+        <div class="layui-input-block">
+            <input type="text" name="url" autocomplete="off" lay-verify="required" lay-reqtext="链接不能为空"
+                   placeholder="请输入链接地址" id="url"
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="button" class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/base.js"></script>
+<script>
+    layui.use(['form'], function () {
+        const form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+        const id = window.getParams('id');
+        const whiteUrl = window.getParams("url");
+        form.val('edit-form',{
+            id:id,
+            url:whiteUrl
+        })
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            const url = window.basePath + '/api/url-permit/url/white/update';
+            let index = window.parent.layer.load(0, {shade: 0.1});
+            window.post(url, data.field, function (data) {
+                parent.layer.close(index);
+                if (data.errcode === 0) {
+                    parent.reloadTable();
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex,function () {
+                        parent.layer.msg('修改成功', {icon: 1, time: 1000});
+                    });
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                parent.layer.close(index);
+                layer.msg("网络出错!", {icon: 5});
+            })
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

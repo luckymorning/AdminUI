@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>添加</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label required">接口地址</label>
+        <div class="layui-input-block">
+            <input type="text" name="url" autocomplete="off" lay-verify="required" lay-reqtext="地址不能为空"
+                   placeholder="请输入链接地址" value=""
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限说明</label>
+        <div class="layui-input-block">
+            <input type="text" name="remark" autocomplete="off"
+                   placeholder="请输入权限说明" value=""
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">接口状态</label>
+        <div class="layui-input-block">
+            <select name="status" lay-filter="status" lay-verify="required">
+                <option value="0" selected="selected">不可用</option>
+                <option value="1">可用</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">接口类型</label>
+        <div class="layui-input-block">
+            <select name="apiStatus" lay-filter="apiStatus" lay-verify="required">
+                <option value="0">不需要登录</option>
+                <option value="1" selected="selected">需要登录并判断权限</option>
+                <option value="2">需要登录并不需要判断权限</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">接口版本</label>
+        <div class="layui-input-block">
+            <input type="number" step="1" min="0" name="version" autocomplete="off" lay-verify="required|number"
+                   lay-reqtext="接口版本不能为空"
+                   placeholder="请输入链接地址" value="0"
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="button" class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/base.js"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            const url = window.basePath + '/api/url-permit/perms/insert';
+            let index = window.parent.layer.load(0, {shade: 0.1});
+            window.postBody(url, data.field, function (data) {
+                parent.layer.close(index);
+                if (data.errcode === 0) {
+                    parent.reloadTable();
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex, function () {
+                        parent.layer.msg('添加成功', {icon: 1, time: 1000});
+                    });
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                parent.layer.close(index);
+                layer.msg("网络出错!", {icon: 5});
+            })
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

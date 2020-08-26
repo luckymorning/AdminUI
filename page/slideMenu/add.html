@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>添加</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../css/dtree/dtree.css">
+    <link rel="stylesheet" href="../../css/dtree/font/dtreefont.css">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" lay-filter="add-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label">父节点</label>
+        <div class="layui-input-block">
+            <ul id="parentIdTree" class="dtree" data-id="-1"></ul>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">菜单标题</label>
+        <div class="layui-input-block">
+            <input type="text" name="title" autocomplete="off" lay-verify="required" lay-reqtext="标题不能为空"
+                   placeholder="请输入菜单标题" value=""
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">菜单类型</label>
+        <div class="layui-input-block">
+            <select name="type" lay-filter="status" lay-verify="required">
+                <option value="0" selected="selected">目录</option>
+                <option value="1">菜单</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">菜单图标</label>
+        <div class="layui-input-block">
+            <input type="text" name="icon" id="iconPicker" lay-filter="iconPicker" class="hide">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单链接</label>
+        <div class="layui-input-block">
+            <input type="text" name="href" autocomplete="off"
+                   placeholder="请输入菜单标题" value=""
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单target</label>
+        <div class="layui-input-block">
+            <input type="text" name="target" autocomplete="off"
+                   placeholder="请输入菜单标题" value="_self"
+                   class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="button" class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script src="../../js/base.js"></script>
+<script>
+    const defaultParentId = window.getParams('parentId');
+    layui.use(['dtree', 'iconPickerFa', 'form'], function () {
+        const iconPickerFa = layui.iconPickerFa,
+            form = layui.form,
+            layer = layui.layer,
+            $ = layui.$,
+            dtree = layui.dtree;
+
+        //树形下拉框
+        dtree.renderSelect({
+            elem: "#parentIdTree",
+            url: window.basePath + '/api/url-permit/slideMenu/list',
+            method: 'get',
+            selectTips: "请选择父节点",
+            menubar: true, //开启菜单栏
+            select: true, //指定下拉树模式
+            selectInitVal: defaultParentId,
+            headers: {
+                authorization: window.Authorization
+            },
+            selectInputName: {
+                nodeId: "parentId",  // 这里，内置表单名称为id，值为nodeId的值
+                context: "title"  // 这里，内置表单名称为title，值为context的值
+            },
+            line: true,//树线
+            dataStyle: 'layuiStyle',//json数据风格
+            dataType: "json",  //参数类型
+            dataFormat: 'list',//data的数据格式
+            response: {
+                statusName: "code", //返回标识（必填）
+                statusCode: 0, //返回码（必填）
+                message: "message", //返回信息（必填）
+                rootName: "data", //根节点名称（必填）
+                treeId: "id", //节点ID（必填）
+                parentId: "parentId", //父节点ID（必填）
+                title: "title", //节点名称（必填）
+            }
+        });
+        //下拉树选中事件
+        dtree.on('node("parentIdTree")', function (obj) {
+            $("div[dtree-id][dtree-select]").removeClass("layui-form-selected");
+            $("div[dtree-id][dtree-card]").removeClass("dtree-select-show layui-anim layui-anim-upbit");
+        });
+
+        //图标选择
+        const iconUrl = window.host + '/lib/font-awesome-4.7.0/less/variables.less';
+        iconPickerFa.render({
+            // 选择器，推荐使用input
+            elem: '#iconPicker',
+            // fa 图标接口
+            url: iconUrl,
+            // 是否开启搜索：true/false，默认true
+            search: true,
+            // 是否开启分页：true/false，默认true
+            page: true,
+            // 每页显示数量，默认12
+            limit: 12,
+            // 点击回调
+            click: function (data) {
+                // console.log(data);
+            },
+            // 渲染成功后的回调
+            success: function (d) {
+                // console.log(d);
+                iconPickerFa.checkIcon('iconPicker', d.data[0]);
+            }
+        });
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            const url = window.basePath + '/api/url-permit/slideMenu/insert';
+            let index = window.parent.layer.load(0, {shade: 0.1});
+            data = data.field;
+            data.icon = 'fa ' + data.icon;
+            data.type = parseInt(data.type);
+            window.post(url, data, function (data) {
+                parent.layer.close(index);
+                if (data.errcode === 0) {
+                    parent.loadData();
+                    const iframeIndex = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(iframeIndex, function () {
+                        parent.layer.msg('添加成功', {icon: 1, time: 1000});
+                    });
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                parent.layer.close(index);
+                layer.msg("网络出错!", {icon: 5});
+            })
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

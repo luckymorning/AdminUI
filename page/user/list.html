@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户列表列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">输入搜索</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="keyName" autocomplete="off" class="layui-input"
+                                       placeholder="用户ID/名称/昵称/真实姓名">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">性别</label>
+                            <div class="layui-input-inline">
+                                <select name="sex" lay-filter="sex">
+                                    <option value="">全部</option>
+                                    <option value="0">未知</option>
+                                    <option value="1">男</option>
+                                    <option value="2">女</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">输入搜索</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="phone" autocomplete="off" class="layui-input"
+                                       placeholder="请输入手机号">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">是否锁定</label>
+                            <div class="layui-input-inline">
+                                <select name="isLocked" lay-filter="isLocked">
+                                    <option value="">全部</option>
+                                    <option value="0">未锁定</option>
+                                    <option value="1">已锁定</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户状态</label>
+                            <div class="layui-input-inline">
+                                <select name="status" lay-filter="status">
+                                    <option value="">全部</option>
+                                    <option value="0">禁用</option>
+                                    <option value="1">启用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户类型</label>
+                            <div class="layui-input-inline">
+                                <select name="systemType" lay-filter="systemType">
+                                    <option value="">全部</option>
+                                    <option value="1">前台</option>
+                                    <option value="2">后台</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary" lay-submit
+                                    lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除</button>
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-warm layui-btn-xs data-resetPass-btn" lay-event="resetPass">重置密码</a>
+            <a class="layui-btn layui-btn-xs data-resetPass-btn" lay-event="bindRoles">绑定角色</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+        </script>
+
+    </div>
+</div>
+<script src="../../js/base.js"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+        const url = window.basePath + '/api/user/list';
+        table.render({
+            elem: '#currentTableId',
+            url: url,
+            autoSort: false,
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            headers: {
+                authorization: window.Authorization
+            },
+            cols: [[
+                {type: "checkbox", width: 50, align: "center"},
+                {field: 'userId', width: 80, title: 'ID', sort: true},
+                {field: 'loginName', title: '登录名', minWidth: 100, sort: true},
+                {field: 'nickName', title: '昵称', minWidth: 100, sort: true},
+                {field: 'realName', title: '真实名称', minWidth: 100, sort: true},
+                {
+                    field: 'sex', title: '性别', minWidth: 80, align: "center", sort: true, templet: function (data) {
+                        let str;
+                        switch (data.status) {
+                            case 1:
+                                str = '男';
+                                break;
+                            case 2:
+                                str = '女';
+                                break;
+                            default:
+                                str = '未知';
+                                break;
+                        }
+                        return str;
+                    }
+                },
+                {field: 'phone', title: '手机号', minWidth: 100, align: "center", sort: true},
+                {
+                    field: 'isLocked',
+                    title: '锁定状态',
+                    minWidth: 120,
+                    align: "center",
+                    sort: true,
+                    templet: function (data) {
+                        let str;
+                        switch (data.isLocked) {
+                            case 0:
+                                str = '是';
+                                break;
+                            case 1:
+                                str = '否';
+                                break;
+                        }
+                        return str;
+                    }
+                },
+                {
+                    field: 'status',
+                    title: '账号状态',
+                    minWidth: 120,
+                    align: "center",
+                    sort: true,
+                    templet: function (data) {
+                        let str;
+                        switch (data.status) {
+                            case 0:
+                                str = '禁用';
+                                break;
+                            case 1:
+                                str = '启用';
+                                break;
+                        }
+                        return str;
+                    }
+                },
+                {
+                    field: 'systemType',
+                    title: '账号类型',
+                    minWidth: 120,
+                    align: "center",
+                    sort: true,
+                    templet: function (data) {
+                        let str;
+                        switch (data.systemType) {
+                            case 1:
+                                str = '前台';
+                                break;
+                            case 2:
+                                str = '后台';
+                                break;
+                        }
+                        return str;
+                    }
+                },
+                {
+                    field: 'avatar', title: '头像', minWidth: 80, sort: true, align: "center", templet: function (data) {
+                        if (data.avatar == null || data.avatar === '' || data.avatar === undefined) {
+                            return '无头像';
+                        } else {
+                            return '<img src="' + data.avatar + '" style="max-height: 100%;width: auto" />'
+                        }
+                    }
+                },
+                {field: 'updated', width: 180, title: '上次更新时间', sort: true},
+                {title: '操作', minWidth: 260, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            parseData: function (res) { //res 即为原始返回的数据
+                let count = 0;
+                let data = null;
+                if (res.data) {
+                    count = res.data.total;
+                    data = res.data.records;
+                }
+                return {
+                    "code": res.errcode, //解析接口状态
+                    "msg": res.errmsg, //解析提示文本
+                    "count": count, //解析数据长度
+                    "data": data //解析数据列表
+                };
+            },
+            request: {
+                pageName: 'current',
+                limitName: 'size'
+            },
+            response: {
+                statusCode: 0 //规定成功的状态码，默认：0
+            },
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                }
+                , where: data.field
+            }, 'data');
+
+            return false;
+        });
+
+        //监听排序事件
+        table.on('sort(currentTableFilter)', function (obj) {
+            table.reload('currentTableId', {
+                where: {
+                    field: obj.field //排序字段
+                    , order: obj.type //排序方式
+                }
+            }, 'data');
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                const index = layer.open({
+                    title: '添加用户',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['500px', '80%'],
+                    content: 'add.html',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            } else if (obj.event === 'delete') {  // 监听删除操作
+                const checkStatus = table.checkStatus('currentTableId')
+                    , data = checkStatus.data;
+                let delIds = [];
+                let tips = ['确认删除以下用户吗'];
+                for (let i in data) {
+                    delIds.push(data[i].userId);
+                    tips.push('【' + data[i].loginName + '】');
+                }
+                layer.confirm(tips.join('<br>'), function (index) {
+                    del(delIds);
+                });
+            }
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log(obj)
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            let data = obj.data;
+            if (obj.event === 'edit') {
+
+                const index = layer.open({
+                    title: '编辑用户',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['500px', '80%'],
+                    content: 'edit.html?id=' + data.userId,
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            } else if (obj.event === 'delete') {
+                layer.confirm('确认删除【' + data.loginName + '】吗？', function (index) {
+                    const delData = [data.userId];
+                    del(delData);
+                });
+            } else if (obj.event === 'resetPass') {
+                //prompt层
+                const userId = data.userId;
+                layer.prompt({title: '输入重置密码，为空则设置默认密码', formType: 1}, function (pass, index) {
+                    layer.close(index);
+                    resetPassword([userId],pass);
+                });
+            } else if (obj.event === 'bindRoles') {
+                const index = layer.open({
+                    title: '绑定角色',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['500px', '80%'],
+                    content: 'bindRoles.html?userId=' + data.userId,
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            }
+        });
+
+        window.loadData = function () {
+            table.reload('currentTableId', {}, 'data');
+        }
+
+        const delUrl = window.basePath + '/api/user/account/deleteList'
+
+        function del(data) {
+            const index = layer.load(0, {shade: 0.1});
+            window.postBody(delUrl, data, function (data) {
+                if (data.errcode === 0) {
+                    layer.msg('删除成功！', {icon: 1});
+                    loadData()
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                layer.msg('网络出错', {icon: 5});
+            }, function () {
+                layer.close(index);
+            })
+        }
+
+        const resetPassUrl = window.basePath + '/api/user/account/batchResetPassword'
+        function resetPassword(userIds, password) {
+            const index = layer.load(0, {shade: 0.1});
+            let data = {};
+            data.userIds = userIds;
+            data.password = password;
+            window.postBody(resetPassUrl, data, function (data) {
+                if (data.errcode === 0) {
+                    layer.msg('重置成功！', {icon: 1});
+                    loadData()
+                } else {
+                    layer.msg(data.errmsg, {icon: 2});
+                }
+            }, function (e) {
+                layer.msg('网络出错', {icon: 5});
+            }, function () {
+                layer.close(index);
+            })
+        }
+    });
+
+</script>
+
+</body>
+</html>
