@@ -109,8 +109,8 @@
                 let count = 0;
                 let data = null;
                 if (res.data) {
-                    count = res.data.total;
-                    data = res.data.records;
+                    count = res.data.totalCount;
+                    data = res.data.list;
                 }
                 return {
                     "code": res.errcode, //解析接口状态
